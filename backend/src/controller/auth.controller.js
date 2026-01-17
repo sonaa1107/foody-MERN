@@ -18,7 +18,7 @@ async function userRegister(req,res){
     })
     const token=jwt.sign({
         id:user._id
-    },'6ee8a840bb8d4c2fb51af79b992abefe')
+    },process.env.JWT_SECRET)
 
     res.cookie("token",token);
 
@@ -32,6 +32,43 @@ async function userRegister(req,res){
     })
 
 }
+async function userLogin(req,res){
+    const {email,password}=req.body;
+    const user=await User.findOne({email});
+    if(!user){
+        res.status(400).json({
+            mssg:"incorrect email or password"
+        })
+    }
+    const isMatch=await bcrypt.compare(password,user.password);
+    if(!isMatch){
+        res.status(400).json({
+            mssg:"incorrect email or password"
+        })
+    }
+    const token=jwt.sign({
+        id:user._id,
+        email:user.email
+    },process.env.JWT_SECRET)
+    res.cookie('token',token)
+
+    res.status(200).json({
+        mssg:"user logged in successfully",
+        User:{
+            name:user.name,
+            email:user.email,
+            id:user._id
+        }
+    })
+}
+async function userLogout(req,res){
+    res.clearCookie('token')
+    res.status(200).json({
+        mssg:"user logout successfully"
+    })
+}
 module.exports={
     userRegister,
+    userLogin,
+    userLogout,
 }

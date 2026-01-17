@@ -1,7 +1,7 @@
 const mongoose=require('mongoose');
 
 function connectDB(){
-    mongoose.connect("mongodb://127.0.0.1:27017/food-view")
+    mongoose.connect(process.env.MongoURL)
     .then(()=>{
         console.log("MongoDB connected")
     })
