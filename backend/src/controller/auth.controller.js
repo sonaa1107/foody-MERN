@@ -1,6 +1,7 @@
 const bcrypt=require('bcrypt')
 const User=require('../model/user.model')
-const jwt=require('jsonwebtoken')
+const jwt=require('jsonwebtoken');
+const foodPartner = require('../model/foodpartner.model');
 
 async function userRegister(req,res){
     const {name,email,password}=req.body;
@@ -67,8 +68,76 @@ async function userLogout(req,res){
         mssg:"user logout successfully"
     })
 }
+async function foodPartnerRegister(req,res){
+    const{name,email,password}=req.body;
+
+    const foodPartnerAlreadyExist=await foodPartner.findOne({email})
+    if(foodPartnerAlreadyExist){
+        res.status(400).json({
+            mssg:"food partner already exist try with differenet email"
+        })
+    }
+    const hashedPassword=await bcrypt.hash(password,10);
+    const foodpartner=await foodPartner.create({
+        name,email,password:hashedPassword
+    })
+
+    const token=jwt.sign(
+        {id:foodpartner._id,email:foodpartner.email}
+        ,process.env.JWT_SECRET
+    )
+    res.cookie("token",token);
+
+    res.status(201).json({
+        mssg:"food partner successfully register",
+        foodPartner:{
+        id:foodpartner._id,
+        name:foodpartner.name,
+        email:foodpartner.email
+        }
+    })
+}
+
+async function foodPartnerLogin(req,res) {
+    const {email,password}=req.body;
+    const foodpartner=await foodPartner.findOne({email});
+    if(!foodpartner){
+        res.status(400).json({
+            mssg:"incorrect email or password"
+        })
+    }
+    const isMatch=await bcrypt.compare(password,foodpartner.password);
+    if(!isMatch){
+        res.status(400).json({
+            mssg:"incorrect email or password"
+        })
+    }
+   const token=jwt.sign(
+        {id:foodpartner._id,email:foodpartner.email}
+        ,process.env.JWT_SECRET
+    )
+    res.cookie("token",token);
+
+    res.status(201).json({
+        mssg:"food partner successfully login",
+        foodPartner:{
+        id:foodpartner._id,
+        name:foodpartner.name,
+        email:foodpartner.email
+        }
+    })
+}
+
+async function foodPartnerLogout(req,res) {
+    res.clearCookie("token").status(200).json({
+        mssg:"food partner logout successfully"
+    })
+}
 module.exports={
     userRegister,
     userLogin,
     userLogout,
+    foodPartnerRegister,
+    foodPartnerLogin,
+    foodPartnerLogout,
 }
