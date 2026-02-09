@@ -69,7 +69,7 @@ async function userLogout(req,res){
     })
 }
 async function foodPartnerRegister(req,res){
-    const{name,email,password}=req.body;
+    const{name,email,password,contactName,phoneNo,address}=req.body;
 
     const foodPartnerAlreadyExist=await foodPartner.findOne({email})
     if(foodPartnerAlreadyExist){
@@ -79,7 +79,12 @@ async function foodPartnerRegister(req,res){
     }
     const hashedPassword=await bcrypt.hash(password,10);
     const foodpartner=await foodPartner.create({
-        name,email,password:hashedPassword
+        name,
+        email,
+        password:hashedPassword,
+        contactName,
+        phoneNo,
+        address,
     })
 
     const token=jwt.sign(
